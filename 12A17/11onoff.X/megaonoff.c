@@ -4,7 +4,7 @@
  *client: test
  * module: this is working code for 8 switches on and off only manul and application
  */
-
+//add new comment
 #include <stdio.h>
 #include <stdlib.h>
 // 'C' source line config statements
