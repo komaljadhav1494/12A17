@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   only_on_off.c
  * Author: Varun sahni
  *client: test
@@ -32,7 +32,7 @@
 
 #include <xc.h>
 // Since we have used 16 MHz crystal
-#define _XTAL_FREQ 16000000  
+#define _XTAL_FREQ 16000000
 
 // Pin MACROS
 #define OUTPUT_RELAY1 PORTBbits.RB1
@@ -115,7 +115,7 @@
 #define SWITCH_11_RELAY
 
 // ALL error Definitions
-/* 
+/*
  * #define WRONG_DATA_RECIEVED_ERROR_CODE ERRX
  * #define RECIVING_OVERRUN_ERROR EROV
  * #define RECEIVING_DATA_LOST_IN_MAIN ERLS
@@ -128,13 +128,13 @@
 #define OFF 0
 #define CHAR_OFF '0'
 #define CHAR_ON '1'
-        
+
 /* DATA USED IN MANUAL END HERE*/
 
 unsigned char ErrorNames[5]="####";
 
 int mainReceivedDataPosition=0, mainDataReceived=FALSE;
-unsigned char mainReceivedDataBuffer[RECIEVED_DATA_LENGTH]="#"; 
+unsigned char mainReceivedDataBuffer[RECIEVED_DATA_LENGTH]="#";
 unsigned char tempReceivedDataBuffer[RECIEVED_DATA_LENGTH-8]="#";
 unsigned char parentalLockBuffer[TOTAL_NUMBER_OF_SWITCH]="000000000000";
 unsigned char copy_parentalLockBuffer[TOTAL_NUMBER_OF_SWITCH]="000000000000";
@@ -167,17 +167,17 @@ void copyReceivedDataBuffer();
 void applianceControl(char switchMSB, char switchLSB, char switchSTATE, char dimmerSpeedMSB, char dimmerSpeedLSB, char parentalControl, char finalFrameState);
 
 interrupt void isr(){
- 
+
     // ************************************* UART INTERRUPT *********************************************** //
-    if(RC1IF){        
+    if(RC1IF){
         if(RC1STAbits.OERR){    // If over run error, then reset the receiver
             RC1STAbits.CREN = 0; // countinuous Recieve Disable
             RC1STAbits.CREN = 1; // countinuous Recieve Enable
-            
+
             ErrorNames[0]='E';      ErrorNames[1]='R';      ErrorNames[2]='O';      ErrorNames[3]='V';
-            errorsISR(ErrorNames); 
-        } 
-        
+            errorsISR(ErrorNames);
+        }
+
         mainReceivedDataBuffer[mainReceivedDataPosition]=RC1REG;
         #ifdef DEBUG
         TX1REG=mainReceivedDataBuffer[mainReceivedDataPosition];
@@ -186,19 +186,19 @@ interrupt void isr(){
             mainReceivedDataPosition++;
             if(mainReceivedDataPosition>15){
                 mainDataReceived=TRUE;
-                mainReceivedDataPosition=0;                
-                RC1IF=0;                
+                mainReceivedDataPosition=0;
+                RC1IF=0;
             }
         }
         else{
             RC1STAbits.CREN = 0; // countinuous Recieve Disable
             RC1STAbits.CREN = 1; // countinuous Recieve Enable
             mainReceivedDataPosition=0; // Reinitiate buffer counter
-            
+
             ErrorNames[0]='E';      ErrorNames[1]='R';      ErrorNames[2]='R';      ErrorNames[3]='X';
-            errorsISR(ErrorNames);            
+            errorsISR(ErrorNames);
         }
-    }// End of RC1IF 
+    }// End of RC1IF
 }
 
 
@@ -216,13 +216,13 @@ int main() {
 //        OUTPUT_RELAY5 = OFF;  OUTPUT_RELAY6 = OFF;    OUTPUT_RELAY7 = OFF;  OUTPUT_RELAY8 = OFF;
             GPIO_pin_Initialize();
             allPeripheralInit();
-    
-    while(1){       
+
+    while(1){
         if(mainDataReceived==TRUE){
             mainDataReceived=FALSE;
             if(mainReceivedDataBuffer[0]=='%' && mainReceivedDataBuffer[1]=='%' && mainReceivedDataBuffer[14]=='@' && mainReceivedDataBuffer[15]=='@'){
                 copyReceivedDataBuffer();
-                
+
                 applianceControl(tempReceivedDataBuffer[0],
                         tempReceivedDataBuffer[1],
                         tempReceivedDataBuffer[2],
@@ -230,14 +230,14 @@ int main() {
                         tempReceivedDataBuffer[4],
                         tempReceivedDataBuffer[5],
                         tempReceivedDataBuffer[6]);
-                                
+
             }   // End of all buffer data check
             else
             {
                 ErrorNames[0]='E';      ErrorNames[1]='R';      ErrorNames[2]='L';      ErrorNames[3]='S';
                 errorsMain(ErrorNames);
-                RC1STAbits.SPEN=0;  // Serial port disabled 
-                RC1STAbits.CREN = 0; // countinuous Recieve Disable                
+                RC1STAbits.SPEN=0;  // Serial port disabled
+                RC1STAbits.CREN = 0; // countinuous Recieve Disable
                 for(int dataBufferCounter = 0; dataBufferCounter< 15; dataBufferCounter++)
                 {
                     mainReceivedDataBuffer[dataBufferCounter] = '#'; // clean received data buffer
@@ -248,7 +248,7 @@ int main() {
         } // End of mainDataReceived condition
 
         /******************** MANUAL RESPONE STARTS HERE************ */
-        
+
         //check switch one status
         //off condition
        int man = 1;
@@ -265,7 +265,7 @@ int main() {
             }
             man=0;
             M1=1;
-            
+
         }
         //on condition
         if(copy_parentalLockBuffer[1] == CHAR_OFF && INPUTSWITCH1 == ON && M1 == ON)
@@ -283,8 +283,8 @@ int main() {
             man=0;
             M1=0;
         }
-        
-       // //check switch second status 
+
+       // //check switch second status
         //off condition
         if(copy_parentalLockBuffer[2] == CHAR_OFF && INPUTSWITCH2 == OFF && M2 == OFF)
         {
@@ -315,9 +315,9 @@ int main() {
             man=0;
             M2=0;
         }
-        
-        
-       // //check switch third status 
+
+
+       // //check switch third status
         //off condition
         if(copy_parentalLockBuffer[3] == CHAR_OFF && INPUTSWITCH3 == OFF && M3 == OFF)
         {
@@ -332,7 +332,7 @@ int main() {
             }
             man=0;
             M3=1;
-          
+
         }
         //on condtion
         if(copy_parentalLockBuffer[3] == CHAR_OFF && INPUTSWITCH3 == ON && M3 == ON)
@@ -348,11 +348,11 @@ int main() {
             }
             man=0;
             M3=0;
-            
+
         }
-        
-     
-       // //check switch fourth status 
+
+
+       // //check switch fourth status
         //off condition
         if(copy_parentalLockBuffer[4] == CHAR_OFF && INPUTSWITCH4 == OFF && M4 == OFF)
         {
@@ -367,7 +367,7 @@ int main() {
             }
             man=0;
             M4=1;
-            
+
         }
         //on condtion
         if(copy_parentalLockBuffer[4] == CHAR_OFF && INPUTSWITCH4 == ON && M4 == ON)
@@ -383,7 +383,7 @@ int main() {
             }
             man=0;
             M4=0;
-           
+
         }
                //off condition
         if(copy_parentalLockBuffer[5] == CHAR_OFF && INPUTSWITCH5 == OFF && M5 == OFF)
@@ -399,7 +399,7 @@ int main() {
             }
             man=0;
             M5=1;
-            
+
         }
         //on condtion
         if(copy_parentalLockBuffer[5] == CHAR_OFF && INPUTSWITCH5 == ON && M5 == ON)
@@ -415,9 +415,9 @@ int main() {
             }
             man=0;
             M5=0;
-           
+
         }
-       
+
                //off condition
         if(copy_parentalLockBuffer[6] == CHAR_OFF && INPUTSWITCH6 == OFF && M6 == OFF)
         {
@@ -432,7 +432,7 @@ int main() {
             }
             man=0;
             M6=1;
-            
+
         }
         //on condtion
         if(copy_parentalLockBuffer[6] == CHAR_OFF && INPUTSWITCH6 == ON && M6 == ON)
@@ -448,10 +448,10 @@ int main() {
             }
             man=0;
             M6=0;
-           
+
         }
-       
-#ifdef SWITCH_7_RELAY   
+
+#ifdef SWITCH_7_RELAY
                //off condition
         if(copy_parentalLockBuffer[7] == CHAR_OFF && INPUTSWITCH7 == OFF && M7 == OFF)
         {
@@ -466,7 +466,7 @@ int main() {
             }
             man=0;
             M7=1;
-            
+
         }
         //on condtion
         if(copy_parentalLockBuffer[7] == CHAR_OFF && INPUTSWITCH7 == ON && M7 == ON)
@@ -482,11 +482,11 @@ int main() {
             }
             man=0;
             M7=0;
-           
+
         }
-#endif  
-       
-#ifdef SWITCH_8_RELAY   
+#endif
+
+#ifdef SWITCH_8_RELAY
        //off condition
         if(copy_parentalLockBuffer[8] == CHAR_OFF && INPUTSWITCH8 == OFF && M8 == OFF)
         {
@@ -501,7 +501,7 @@ int main() {
             }
             man=0;
             M8=1;
-            
+
         }
         //on condtion
         if(copy_parentalLockBuffer[8] == CHAR_OFF && INPUTSWITCH8 == ON && M8 == ON)
@@ -517,10 +517,10 @@ int main() {
             }
             man=0;
             M8=0;
-           
+
         }
-#endif   
-       #ifdef SWITCH_9_RELAY   
+#endif
+       #ifdef SWITCH_9_RELAY
        //off condition
         if(copy_parentalLockBuffer[9] == CHAR_OFF && INPUTSWITCH9 == OFF && M9 == OFF)
         {
@@ -535,7 +535,7 @@ int main() {
             }
             man=0;
             M9=1;
-            
+
         }
         //on condtion
         if(copy_parentalLockBuffer[9] == CHAR_OFF && INPUTSWITCH9 == ON && M9 == ON)
@@ -551,10 +551,10 @@ int main() {
             }
             man=0;
             M9=0;
-           
+
         }
-#endif 
-       #ifdef SWITCH_10_RELAY   
+#endif
+       #ifdef SWITCH_10_RELAY
        //off condition
         if(copy_parentalLockBuffer[10] == CHAR_OFF && INPUTSWITCH10 == OFF && M10 == OFF)
         {
@@ -569,7 +569,7 @@ int main() {
             }
             man=0;
             M10=1;
-            
+
         }
         //on condtion
         if(copy_parentalLockBuffer[10] == CHAR_OFF && INPUTSWITCH10 == ON && M10 == ON)
@@ -585,10 +585,10 @@ int main() {
             }
             man=0;
             M10=0;
-           
+
         }
-#endif 
-              #ifdef SWITCH_11_RELAY   
+#endif
+              #ifdef SWITCH_11_RELAY
        //off condition
         if(copy_parentalLockBuffer[11] == CHAR_OFF && INPUTSWITCH11 == OFF && M11 == OFF)
         {
@@ -603,7 +603,7 @@ int main() {
             }
             man=0;
             M11=1;
-            
+
         }
         //on condtion
         if(copy_parentalLockBuffer[11] == CHAR_OFF && INPUTSWITCH11 == ON && M11 == ON)
@@ -619,62 +619,63 @@ int main() {
             }
             man=0;
             M11=0;
-           
+
         }
-#endif 
-    }    
+#endif
+    }
+    //we are not using dimmer as a switch
 }
 
 void applianceControl(char charSwitchMSB, char charSwitchLSB, char charSwitchSTATE, char chDimmerSpeedMSB, char chDimmerSpeedLSB,
         char charParentalControl, char charFinalFrameState){
-    
+
     //define used variables and initilize it with zero
     int integerSwitchNumber = 0;
     int integerSwitchState = 0;
     int integerSpeed = 0;
     int currentStateBufferPositions=0;
-    // Get switch Number in Integer format 
+    // Get switch Number in Integer format
     //define all used character data types and initlize it with "#"
     char switchNumberStringBuffer[2]="#";
     char dimmerSpeedStringBuffer[2]="#";
-    
+
     switchNumberStringBuffer[0]=charSwitchMSB;
-    switchNumberStringBuffer[1]=charSwitchLSB;    
+    switchNumberStringBuffer[1]=charSwitchLSB;
     integerSwitchNumber = atoi(switchNumberStringBuffer);//convert string into integer
-    
+
     // Get switch State in Integer Format
-    
+
     integerSwitchState = charSwitchSTATE-'0';
-    
-    // Get speed of Fan or level of dimmer    
+
+    // Get speed of Fan or level of dimmer
     dimmerSpeedStringBuffer[0]=chDimmerSpeedMSB;
-    dimmerSpeedStringBuffer[1]=chDimmerSpeedLSB;    
+    dimmerSpeedStringBuffer[1]=chDimmerSpeedLSB;
     integerSpeed = atoi(dimmerSpeedStringBuffer);
-    
+
     // save Parental lock state of each switch into parental lock buffer
 //    int integerParentalControl=charParentalControl-'0';
     parentalLockBuffer[integerSwitchNumber] = charParentalControl;
     copy_parentalLockBuffer[integerSwitchNumber]=parentalLockBuffer[integerSwitchNumber];
     // ACKNOWLEDGMENT data Format :->> (Gateway+SwitchState+SwitchMSB+SwitchLSB)
-    
+
     currentStateBufferPositions = ((1+4*(integerSwitchNumber))-5);
     currentStateBuffer[currentStateBufferPositions++] = 'G';
     currentStateBuffer[currentStateBufferPositions++] = charSwitchSTATE;
     currentStateBuffer[currentStateBufferPositions++] = charSwitchMSB;
-    currentStateBuffer[currentStateBufferPositions] = charSwitchLSB;    
-    
+    currentStateBuffer[currentStateBufferPositions] = charSwitchLSB;
+
     currentStateBufferPositions-=3;     // since we have come forward by 3 address in current state buffer
-    if(charFinalFrameState=='1')    // until 
+    if(charFinalFrameState=='1')    // until
     {
-        sendAcknowledgment(currentStateBuffer+currentStateBufferPositions);    
+        sendAcknowledgment(currentStateBuffer+currentStateBufferPositions);
     }
-    
+
     switch(integerSwitchNumber){
         case 1:
         {
             OUTPUT_RELAY1 = integerSwitchState;
         }break;
-            
+
         case 2:
             {
             OUTPUT_RELAY2 = integerSwitchState;
@@ -685,7 +686,7 @@ void applianceControl(char charSwitchMSB, char charSwitchLSB, char charSwitchSTA
             OUTPUT_RELAY3 = integerSwitchState;
 
         } break;
-          
+
         case 4:
         {
             OUTPUT_RELAY4 = integerSwitchState;
@@ -693,7 +694,7 @@ void applianceControl(char charSwitchMSB, char charSwitchLSB, char charSwitchSTA
         case 5:
         {
             OUTPUT_RELAY5 = integerSwitchState;
-        }break;  
+        }break;
         case 6:
         {
             OUTPUT_RELAY6 = integerSwitchState;
@@ -702,36 +703,36 @@ void applianceControl(char charSwitchMSB, char charSwitchLSB, char charSwitchSTA
         case 7:
         {
             OUTPUT_RELAY7 = integerSwitchState;
-        }break; 
-#endif     
-#ifdef SWITCH_8_RELAY        
+        }break;
+#endif
+#ifdef SWITCH_8_RELAY
         case 8:
         {
             OUTPUT_RELAY8 = integerSwitchState;
-        }break; 
-#endif      
-        #ifdef SWITCH_9_RELAY        
+        }break;
+#endif
+        #ifdef SWITCH_9_RELAY
         case 9:
         {
             OUTPUT_RELAY9 = integerSwitchState;
-        }break; 
-#endif  
-        #ifdef SWITCH_10_RELAY        
+        }break;
+#endif
+        #ifdef SWITCH_10_RELAY
         case 10:
         {
             OUTPUT_RELAY10 = integerSwitchState;
-        }break; 
-#endif  
-        #ifdef SWITCH_11_RELAY        
+        }break;
+#endif
+        #ifdef SWITCH_11_RELAY
         case 11:
         {
             OUTPUT_RELAY11 = integerSwitchState;
-        }break; 
-#endif 
+        }break;
+#endif
             default:
             break;
         }
-    
+
 }
 
 
@@ -752,8 +753,8 @@ void GPIO_pin_Initialize(){
     INPUT_SWITCH_DIR_9=1;
     INPUT_SWITCH_DIR_10=1;
     INPUT_SWITCH_DIR_11=1;
-   
-    
+
+
     OUTPUT_RELAY_DIR_1 = 0;
     OUTPUT_RELAY_DIR_2 = 0;
     OUTPUT_RELAY_DIR_3 = 0;
@@ -765,14 +766,14 @@ void GPIO_pin_Initialize(){
     OUTPUT_RELAY_DIR_9=0;
     OUTPUT_RELAY_DIR_10=0;
     OUTPUT_RELAY_DIR_11=0;
-   
-    
+
+
     // peripherals directions
-    
+
     // USART DIRECTIONS
     USART_1_TRANSMIT_OUTPUT_DIR = 0;
     USART_1_RECIEVE_INPUT_DIR = 1;
-    
+
     clearAllPorts();
 }
 
@@ -839,7 +840,7 @@ void AllInterruptEnable(){
 
     // Enables all active peripheral interrupts -----> INTCON reg .... bit 6         page 105
     PEIE = 1;
-    
+
     // enable receive interrupt
     PIE1bits.RC1IE = 1;                    // handled into INTERRUPT_Initialize()
 
@@ -848,7 +849,7 @@ void AllInterruptEnable(){
 void errorsISR(char* errNum){
     int Tx_count=0;
   	while(Tx_count!=4)
- 	{ 
+ 	{
         while (!TX1STAbits.TRMT);
  		TX1REG = *errNum;
  		*errNum++;
@@ -858,7 +859,7 @@ void errorsISR(char* errNum){
 void errorsMain(char* errNum){
    int Tx_count=0;
   	while(Tx_count!=4)
- 	{ 
+ 	{
         while (!TX1STAbits.TRMT);
  		TX1REG = *errNum;
  		*errNum++;
@@ -868,7 +869,7 @@ void errorsMain(char* errNum){
 void sendAcknowledgment(char* currentStateBuffer){
   int Tx_count=0;
   	while(Tx_count!=4)
- 	{ 
+ 	{
         while (!TX1STAbits.TRMT);
 //        TX1REG='S';
  		TX1REG = *currentStateBuffer;
@@ -889,17 +890,17 @@ void copyReceivedDataBuffer(){
  */
 void pinINIT_extra(){
     ANSELG=0x00;    WPUG = 0;
-    
+
     ANSELF=0x00;
-    
+
     ANSELE=0x00;    WPUE=0x00;
-    
+
     ANSELD=0x00;    WPUD=0x00;
-    
+
     ANSELB=0x00;    WPUB=0x00;
-    
-    ANSELA=0x00;     
-} 
+
+    ANSELA=0x00;
+}
 
 /*
  * always clear all the ports before initialization
