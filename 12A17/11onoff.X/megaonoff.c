@@ -6,6 +6,7 @@
  *clent name: sunil akmble
  * Created on 27 August, 2018, 3:49 PM
  */
+//add new comment is corel
 #include <stdio.h>
 #include <stdlib.h>
 #include <pic16f1526.h>
